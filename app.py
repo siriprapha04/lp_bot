@@ -96,5 +96,50 @@ def download_file():
     
     return send_file(out, as_attachment=True, download_name="LP_Report_Cloud.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
+@app.route("/reports")
+def view_reports():
+
+    if not DB_URL:
+        return "ขาดการเชื่อมต่อ Database"
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT timestamp, branch, status, detail
+        FROM reports
+        ORDER BY id DESC
+    """)
+
+    rows = c.fetchall()
+
+    c.close()
+    conn.close()
+
+    html = """
+    <h2>รายการข้อมูลที่บันทึก</h2>
+    <table border="1" cellpadding="5">
+    <tr>
+        <th>วันที่-เวลา</th>
+        <th>สาขา</th>
+        <th>สถานะ</th>
+        <th>รายละเอียด</th>
+    </tr>
+    """
+
+    for row in rows:
+        html += f"""
+        <tr>
+            <td>{row[0]}</td>
+            <td>{row[1]}</td>
+            <td>{row[2]}</td>
+            <td>{row[3]}</td>
+        </tr>
+        """
+
+    html += "</table>"
+
+    return html
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
